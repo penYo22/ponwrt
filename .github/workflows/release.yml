@@ -77,10 +77,8 @@ jobs:
 
       - name: Add rtp2httpd LuCI app
         run: |
-          mkdir -p package/rtp2httpd
-          curl -fsSL https://codeload.github.com/stackia/rtp2httpd/tar.gz/refs/heads/main \
-            | tar -xz --strip-components=3 -C package/rtp2httpd \
-              stackia-rtp2httpd-main/openwrt-support/luci-app-rtp2httpd
+          git clone --depth 1 https://github.com/stackia/rtp2httpd.git /tmp/rtp2httpd
+          cp -r /tmp/rtp2httpd/openwrt-support/luci-app-rtp2httpd package/luci-app-rtp2httpd
 
       - name: Load repository signing key
         env:
@@ -159,6 +157,7 @@ jobs:
           - luci-app-rtp2httpd（rtp2httpd 管理界面）
           - luci-app-vlmcsd（KMS 服务器管理界面）
           - luci-app-wol（网络唤醒）
+          - luci-app-ttyd（网页终端）
           - openssh-sftp-server（OpenSSH SFTP 服务）
           - curl
           - luci-app-airoha-npu（Airoha NPU 状态监控）
