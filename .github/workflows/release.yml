@@ -69,16 +69,21 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Add Airoha NPU LuCI app
+      - name: Add custom LuCI apps
         run: |
+          mkdir -p package/custom
           git clone --depth 1 \
             https://github.com/luanmuc/luci-app-airoha-npu.git \
-            package/luci-app-airoha-npu
+            package/custom/luci-app-airoha-npu
+          git clone --depth 1 https://github.com/qwe3017/luci-app.git /tmp/qwe3017-luci-app
+          cp -r /tmp/qwe3017-luci-app/luci-app-natmode package/custom/luci-app-natmode
+          cp -r /tmp/qwe3017-luci-app/luci-app-pon-status package/custom/luci-app-pon-status
 
       - name: Add rtp2httpd LuCI app
         run: |
           git clone --depth 1 https://github.com/stackia/rtp2httpd.git /tmp/rtp2httpd
-          cp -r /tmp/rtp2httpd/openwrt-support/luci-app-rtp2httpd package/luci-app-rtp2httpd
+          mkdir -p package/custom
+          cp -r /tmp/rtp2httpd/openwrt-support/luci-app-rtp2httpd package/custom/luci-app-rtp2httpd
 
       - name: Load repository signing key
         env:
@@ -153,6 +158,8 @@ jobs:
 
           - luci-app-upnp（UPnP）
           - luci-app-iptv（IPTV 桥接配置）
+          - luci-app-natmode（NAT 类型选择：全锥形/受限型/对称型）
+          - luci-app-pon-status（PON 光模块状态卡片）
           - rtp2httpd（RTP/RTSP 组播转 HTTP 单播，针对国内 IPTV 优化）
           - luci-app-rtp2httpd（rtp2httpd 管理界面）
           - luci-app-vlmcsd（KMS 服务器管理界面）
