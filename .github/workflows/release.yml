@@ -75,6 +75,13 @@ jobs:
             https://github.com/luanmuc/luci-app-airoha-npu.git \
             package/luci-app-airoha-npu
 
+      - name: Add rtp2httpd LuCI app
+        run: |
+          mkdir -p package/rtp2httpd
+          curl -fsSL https://codeload.github.com/stackia/rtp2httpd/tar.gz/refs/heads/main \
+            | tar -xz --strip-components=3 -C package/rtp2httpd \
+              stackia-rtp2httpd-main/openwrt-support/luci-app-rtp2httpd
+
       - name: Load repository signing key
         env:
           PONWRT_APK_PRIVATE_KEY: ${{ secrets.PONWRT_APK_PRIVATE_KEY }}
@@ -131,6 +138,32 @@ jobs:
         working-directory: release
         run: sha256sum *.tar.zst > sha256sums
 
+      - name: Write release notes
+        working-directory: release
+        run: |
+          cat > release-notes.md <<'EOF'
+          ## 固件说明
+
+          本固件基于 PonWrt，支持以下机型：
+
+          - Nokia XG-040G-MD UBI
+          - Nokia XG-040G-TF UBI
+          - UnionMan UNG00A
+          - ZNXT ZN504XG-D
+
+          ## 新增插件
+
+          - luci-app-upnp（UPnP）
+          - luci-app-iptv（IPTV 桥接配置）
+          - rtp2httpd（RTP/RTSP 组播转 HTTP 单播，针对国内 IPTV 优化）
+          - luci-app-rtp2httpd（rtp2httpd 管理界面）
+          - luci-app-vlmcsd（KMS 服务器管理界面）
+          - luci-app-wol（网络唤醒）
+          - openssh-sftp-server（OpenSSH SFTP 服务）
+          - curl
+          - luci-app-airoha-npu（Airoha NPU 状态监控）
+          EOF
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -141,10 +174,10 @@ jobs:
             "$RELEASE_TAG"
             release/*.tar.zst
             release/sha256sums
+            release/release-notes.md
             --repo "$GITHUB_REPOSITORY"
             --target "$GITHUB_SHA"
             --title "PonWrt $RELEASE_TAG"
-            --generate-notes
           )
           if [ "$PRERELEASE" = true ]; then
             args+=(--prerelease)
