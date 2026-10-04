@@ -108,17 +108,26 @@ jobs:
       - name: Build ${{ matrix.target }}
         run: make -j"$(nproc)"
 
-      - name: Pack ${{ matrix.target }}
+      - name: Collect ${{ matrix.target }} images
         run: |
-          mkdir release
-          tar --zstd -cf "release/ponwrt-${{ matrix.target }}.tar.zst" \
-            -C bin/targets/airoha "${{ matrix.target }}"
+          set -e
+          src="bin/targets/airoha/${{ matrix.target }}"
+          mkdir -p release
+          find "$src" -maxdepth 1 -type f \
+            \( -name '*.itb' -o -name '*.bin' \) \
+            -exec cp -v {} release/ \;
+          rm -f release/kernel.bin
+          if [ -z "$(ls -A release)" ]; then
+            echo "no firmware images found in $src" >&2
+            exit 1
+          fi
+          ls -lh release
 
       - name: Upload ${{ matrix.target }}
         uses: actions/upload-artifact@v4
         with:
           name: ponwrt-${{ matrix.target }}
-          path: release/*.tar.zst
+          path: release/*
           if-no-files-found: error
           retention-days: 7
 
@@ -130,7 +139,7 @@ jobs:
       contents: write
 
     steps:
-      - name: Download firmware archives
+      - name: Download firmware images
         uses: actions/download-artifact@v4
         with:
           pattern: ponwrt-*
@@ -139,11 +148,17 @@ jobs:
 
       - name: Create checksums
         working-directory: release
-        run: sha256sum *.tar.zst > sha256sums
+        run: |
+          ls -lh
+          shopt -s nullglob
+          files=(*.itb *.bin)
+          sha256sum "${files[@]}" > sha256sums
+          cat sha256sums
 
       - name: Write release notes
         working-directory: release
         run: |
+          set -e
           cat > release-notes.md <<'EOF'
           ## 固件说明
 
@@ -154,23 +169,38 @@ jobs:
           - UnionMan UNG00A
           - ZNXT ZN504XG-D
 
-          ## 新增插件
+          每台机型对应两个可直接刷写的镜像，**无需解压**：
+
+          - `*-sysupgrade.itb`：系统升级镜像，用于 Web 界面升级或 UBI 写入
+          - `*-recovery.itb`：恢复镜像，用于救砖或首次刷写
+
+          ## 已添加插件
 
           - luci-app-upnp（UPnP）
           - luci-app-iptv（IPTV 桥接配置）
           - luci-app-natmode（NAT 类型选择：全锥形/受限型/对称型）
-          - luci-app-pon-status（PON 光模块状态卡片）
-          - rtp2httpd（RTP/RTSP 组播转 HTTP 单播，针对国内 IPTV 优化）
+          - luci-app-pon-status（PON 光模块状态）
+          - luci-app-homeproxy（代理客户端，支持 TProxy 透明代理）
+          - sing-box（HomeProxy 代理内核）
+          - rtp2httpd（RTP/RTSP 组播转 HTTP 单播）
           - luci-app-rtp2httpd（rtp2httpd 管理界面）
-          - luci-app-vlmcsd（KMS 服务器管理界面）
+          - luci-app-vlmcsd（KMS 服务器）
           - luci-app-wol（网络唤醒）
           - luci-app-ttyd（网页终端）
+          - luci-app-airoha-npu（Airoha NPU 状态监控）
           - openssh-sftp-server（OpenSSH SFTP 服务）
           - curl
-          - luci-app-airoha-npu（Airoha NPU 状态监控）
-          - luci-app-homeproxy（代理客户端，基于 sing-box，支持 TProxy 透明代理）
-          - sing-box（HomeProxy 代理内核）
           EOF
+
+          {
+            echo ""
+            echo "## 本次固件文件"
+            echo ""
+            for f in *.itb *.bin; do
+              [ -e "$f" ] || continue
+              echo "- \`$f\` ($(du -h "$f" | cut -f1))"
+            done
+          } >> release-notes.md
 
       - name: Create GitHub release
         env:
@@ -180,9 +210,9 @@ jobs:
         run: |
           args=(
             "$RELEASE_TAG"
-            release/*.tar.zst
+            release/*.itb
             release/sha256sums
-            release/release-notes.md
+            --notes-file release/release-notes.md
             --repo "$GITHUB_REPOSITORY"
             --target "$GITHUB_SHA"
             --title "PonWrt $RELEASE_TAG"
