@@ -1,0 +1,8 @@
+#!/bin/sh
+# Default the system timezone to China Standard Time (UTC+8).
+
+uci -q set system.@system[0].timezone='CST-8'
+uci -q set system.@system[0].zonename='Asia/Shanghai'
+uci -q commit system
+
+exit 0
