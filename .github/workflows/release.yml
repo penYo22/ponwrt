@@ -66,7 +66,6 @@ jobs:
 
       - name: Install feeds
         run: |
-          echo "src-git nikki https://github.com/nikkinikki-org/OpenWrt-nikki.git" >> feeds.conf.default
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
@@ -166,14 +165,14 @@ jobs:
           本固件基于 PonWrt，支持以下机型：
 
           - Nokia XG-040G-MD UBI
-          - Nokia XG-040G-TF UBI
-          - UnionMan UNG00A
-          - ZNXT ZN504XG-D
 
           每台机型对应两个可直接刷写的镜像，**无需解压**：
 
           - `*-sysupgrade.itb`：系统升级镜像，用于 Web 界面升级或 UBI 写入
           - `*-recovery.itb`：恢复镜像，用于救砖或首次刷写
+
+          OpenClash 的内核不随固件打包，首次使用需要在 OpenClash 界面里
+          下载一次内核（设备需能联网）。
 
           ## 已添加插件
 
@@ -181,9 +180,7 @@ jobs:
           - luci-app-iptv（IPTV 桥接配置）
           - luci-app-natmode（NAT 类型选择：全锥形/受限型/对称型）
           - luci-app-pon-status（PON 光模块状态）
-          - luci-app-nikki（代理客户端，基于 Mihomo，支持 TProxy 透明代理）
-          - nikki（Nikki 透明代理服务）
-          - mihomo-meta（Mihomo 代理内核）
+          - luci-app-openclash（代理客户端，支持 TProxy 透明代理）
           - rtp2httpd（RTP/RTSP 组播转 HTTP 单播）
           - luci-app-rtp2httpd（rtp2httpd 管理界面）
           - luci-app-vlmcsd（KMS 服务器）
