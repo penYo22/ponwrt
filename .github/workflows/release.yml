@@ -165,6 +165,9 @@ jobs:
           本固件基于 PonWrt，支持以下机型：
 
           - Nokia XG-040G-MD UBI
+          - Nokia XG-040G-TF UBI
+          - UnionMan UNG00A
+          - ZNXT ZN504XG-D
 
           每台机型对应两个可直接刷写的镜像，**无需解压**：
 
