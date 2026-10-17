@@ -106,7 +106,11 @@ jobs:
         run: make download -j"$(nproc)"
 
       - name: Build ${{ matrix.target }}
-        run: make -j"$(nproc)"
+        run: |
+          make package/feeds/packages/miniupnpd/clean || true
+          make package/feeds/packages/miniupnpd/compile V=s -j1 2>&1 | tail -n 300
+          echo "=== diagnostic build finished ==="
+          exit 1
 
       - name: Collect ${{ matrix.target }} images
         run: |
