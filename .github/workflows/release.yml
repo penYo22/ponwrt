@@ -107,10 +107,20 @@ jobs:
 
       - name: Build ${{ matrix.target }}
         run: |
-          make package/feeds/packages/miniupnpd/clean || true
-          make package/feeds/packages/miniupnpd/compile V=s -j1 2>&1 | tail -n 300
-          echo "=== diagnostic build finished ==="
-          exit 1
+          set +e
+          make -j"$(nproc)"
+          status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "=== BUILD FAILED (exit $status) ==="
+            echo "--- most recently modified package logs ---"
+            find logs -name '*.txt' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -15 | cut -d' ' -f2-
+            echo "--- log tails ---"
+            for f in $(find logs -name 'compile.txt' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -3 | cut -d' ' -f2-); do
+              echo "========== $f =========="
+              tail -n 150 "$f"
+            done
+          fi
+          exit "$status"
 
       - name: Collect ${{ matrix.target }} images
         run: |
