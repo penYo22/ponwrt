@@ -69,6 +69,15 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
+      - name: Drop stale miniupnpd patches
+        run: |
+          # miniupnpd 2.3.11 already contains 020/030; 040 no longer applies.
+          rm -f \
+            feeds/packages/net/miniupnpd/patches/020-descr-filter-fix.patch \
+            feeds/packages/net/miniupnpd/patches/030-allow-private-fix.patch \
+            feeds/packages/net/miniupnpd/patches/040-improve-logging.patch
+          ls feeds/packages/net/miniupnpd/patches/
+
       - name: Add custom LuCI apps
         run: |
           mkdir -p package/custom
