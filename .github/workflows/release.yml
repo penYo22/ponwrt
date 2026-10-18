@@ -139,7 +139,7 @@ jobs:
           set_cfg CONFIG_VERSION_DIST '"PonWrt"'
           set_cfg CONFIG_VERSION_NUMBER "\"$TS\""
           set_cfg CONFIG_VERSION_CODE "\"$SHA\""
-          unset_cfg CONFIG_VERSION_FILENAMES
+          set_cfg CONFIG_VERSION_FILENAMES y
           unset_cfg CONFIG_VERSION_CODE_FILENAMES
           make defconfig
           grep -E '^CONFIG_VERSION' .config || true
