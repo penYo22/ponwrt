@@ -111,6 +111,39 @@ jobs:
             configs/release.config > .config
           make defconfig
 
+      - name: Stamp build time
+        run: |
+          set -e
+          TS=$(TZ=Asia/Shanghai date +%Y%m%d-%H%M)
+          SHA=$(git rev-parse --short=7 HEAD 2>/dev/null || echo unknown)
+          echo "build stamp: $TS / $SHA"
+          set_cfg() {
+            key="$1"; val="$2"
+            if grep -q "^${key}=" .config; then
+              sed -i "s|^${key}=.*|${key}=${val}|" .config
+            elif grep -q "^# ${key} is not set" .config; then
+              sed -i "s|^# ${key} is not set|${key}=${val}|" .config
+            else
+              printf '%s=%s\n' "$key" "$val" >> .config
+            fi
+          }
+          unset_cfg() {
+            key="$1"
+            if grep -q "^${key}=" .config; then
+              sed -i "s|^${key}=.*|# ${key} is not set|" .config
+            elif ! grep -q "^# ${key} is not set" .config; then
+              printf '# %s is not set\n' "$key" >> .config
+            fi
+          }
+          set_cfg CONFIG_VERSIONOPT y
+          set_cfg CONFIG_VERSION_DIST '"PonWrt"'
+          set_cfg CONFIG_VERSION_NUMBER "\"$TS\""
+          set_cfg CONFIG_VERSION_CODE "\"$SHA\""
+          unset_cfg CONFIG_VERSION_FILENAMES
+          unset_cfg CONFIG_VERSION_CODE_FILENAMES
+          make defconfig
+          grep -E '^CONFIG_VERSION' .config || true
+
       - name: Download sources
         run: make download -j"$(nproc)"
 
